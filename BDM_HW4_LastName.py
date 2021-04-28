@@ -42,7 +42,7 @@ if __name__=='__main__':
     places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv').map(lambda x: x.split(',')).map(lambda x: (next(categorize(x[9])),x[1])).filter(lambda x: x[0] != 'whatever').collect()
     rdd_places =sc.parallelize(places)
     df_places = rdd_places.toDF(['category','store_id'])
-    df = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/*') \
+    df = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/part-00000') \
         .map(lambda x: next(csv.reader([x.encode('utf-8')]))) \
         .filter(lambda x: len(x[12]) == 25) \
         .map(lambda x: (x[1],next(range_f(x[12],x[13])), ast.literal_eval(x[16]))) \
@@ -62,5 +62,4 @@ if __name__=='__main__':
       df_new = df_cat.groupBy('dates').agg(magic_percentile.alias('median'),magic_std.alias('std')).withColumn('year', pyspark.sql.functions.split(df1['dates'], '-').getItem(0))
       df1_new = df_new.withColumn('low', ( df_new['median'] - df_new['std'] )  ).withColumn('high', ( df_new['median'] + df_new['std'] )  ).withColumn("low", F.when(F.col("low") > 0, F.col("low")).otherwise(0)).orderBy('dates')
       df_new = df1_new.select('year','dates','median','low','high')
-      rdd = df_new.rdd.map(tuple)
-      rdd.saveAsTextFile(category)
+      df_new.write.csv('/test/'+category)
