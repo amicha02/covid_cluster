@@ -6,6 +6,7 @@ from pyspark.sql.functions import arrays_zip, col, explode
 import ast,datetime
 import pyspark.sql.functions as F
 import csv
+import sys
 def categorize(x):
   if x == '452210' or x == '452311':
     yield ('big_box_grocers')
@@ -35,14 +36,14 @@ def range_f(start,end):
   for date in range:
     list1.append(date.strftime('%Y-%m-%d'))
   yield list1[:-1]
-  places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv') \
+if __name__=='__main__':
+    sc = pyspark.SparkContext()
+    sqlContext = sql.SQLContext(sc)
+    places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv') \
     .map(lambda x: x.split(',')) \
     .map(lambda x: (next(categorize(x[9])),x[1])) \
     .filter(lambda x: x[0] != 'whatever') \
     .collect()
-if __name__=='__main__':
-    sc = pyspark.SparkContext()
-    sqlContext = sql.SQLContext(sc)
     rdd_places =sc.parallelize(places)
     df_places = rdd_places.toDF(['category','store_id'])
     df = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/*') \
