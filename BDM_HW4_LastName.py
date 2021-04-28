@@ -46,7 +46,7 @@ if __name__=='__main__':
     .collect()
     rdd_places =sc.parallelize(places)
     df_places = rdd_places.toDF(['category','store_id'])
-    df = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/*') \
+    df = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/part-00000') \
         .map(lambda x: next(csv.reader([x.encode('utf-8')]))) \
         .filter(lambda x: len(x[12]) == 25) \
         .map(lambda x: (x[1],next(range_f(x[12],x[13])), ast.literal_eval(x[16]))) \
