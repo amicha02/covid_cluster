@@ -40,7 +40,7 @@ if __name__=='__main__':
       yield list1[:-1]
     sc = pyspark.SparkContext()
     sqlContext = sql.SQLContext(sc)
-    places = sc.textFile('core-places-nyc.csv').smap(lambda x: x.split(',')).map(lambda x: (next(categorize(x[9])),x[1])).filter(lambda x: x[0] != 'whatever').collect()
+    places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv').map(lambda x: x.split(',')).map(lambda x: (next(categorize(x[9])),x[1])).filter(lambda x: x[0] != 'whatever').collect()
     rdd_places =sc.parallelize(places)
     df_places = rdd_places.toDF(['category','store_id'])
     df = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/part-00000') \
