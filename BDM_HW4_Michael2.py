@@ -66,4 +66,4 @@ if __name__=='__main__':
           split_col = pyspark.sql.functions.split(df_category['date'], '-')
           df_new = df_category.groupBy('date').agg(magic_percentile.alias('median'),magic_std.alias('std'))
           df1_new = df_new.withColumn('year', split_col.getItem(0)).withColumn('low', ( df_new['median'] - df_new['std'] ) ).withColumn('high', ( df_new['median'] + df_new['std'] )  ).withColumn("low", F.when(F.col("low") > 0, F.col("low")).otherwise(0))
-          df1_new.write.csv(category)
+          df1_new.saveAsTextFile(category)
