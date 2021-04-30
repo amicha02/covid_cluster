@@ -60,10 +60,10 @@ if __name__=='__main__':
     categories = ['big_box_grocers','convenience_stores','drinking_places','full_service_restaurants','limited_service_restaurants','pharmacies_and_drug_stores','snack_and_bakeries','specialty_food_stores','supermarkets_except_convenience_stores']
     df = rdd.toDF(['date','visits','category'])
     for category in categories:
-          df_category = df.filter(F.col('category') == 'full_service_restaurants')
+          df_category = df.filter(F.col('category') == category)
           magic_percentile = F.expr('percentile_approx(visits, 0.5)')
           magic_std = F.expr('stddev(visits)')
           split_col = pyspark.sql.functions.split(df_category['date'], '-')
           df_new = df_category.groupBy('date').agg(magic_percentile.alias('median'),magic_std.alias('std'))
           df1_new = df_new.withColumn('year', split_col.getItem(0)).withColumn('low', ( df_new['median'] - df_new['std'] ) ).withColumn('high', ( df_new['median'] + df_new['std'] )  ).withColumn("low", F.when(F.col("low") > 0, F.col("low")).otherwise(0))
-          df1_new.saveAsTextFile(category)
+          df1_new.write.csv('test/'+category)
