@@ -32,8 +32,7 @@ if __name__=='__main__':
     def extractPlaces(partId, records):
         if partId==0:
             next(records)
-        import csv
-        reader = csv.reader(records)
+        reader = csv.reader(records.encode('utf-8'))
         for row in reader:
             (id,category) = (row[1],next(categorize(row[9])))
             if category != 'whatever':
@@ -47,7 +46,7 @@ if __name__=='__main__':
     def extractSchools(partId, list_of_records):
         if partId==0: 
             next(list_of_records) # skipping the first line
-        reader = csv.reader(list_of_records)
+        reader = csv.reader(list_of_records.encode('utf-8'))
         for row in reader:
                 (id, dates,visits) = (row[1], next(range_f(row[12], row[13])),row[16])
                 for i,date in enumerate(dates):
