@@ -55,6 +55,21 @@ if __name__=='__main__':
             yield (number)
         if number <0:
             yield (0)
+    def median(n_num):
+        n = len(n_num)
+        n_num = sorted(n_num)
+        if n % 2 == 0:
+            median1 = n_num[n//2]
+            median2 = n_num[n//2 - 1]
+            median = (median1 + median2)/2
+        else:
+           median = n_num[n//2]
+        return (median)
+    def stddev(data):
+        n = len(data)
+        mean = sum(data)/n
+        stddev = (sum([(x-mean)**2 for x in data])/(n-1))**0.5
+        return stddev 
     sc = pyspark.SparkContext()
     sqlContext = sql.SQLContext(sc)
     places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv', use_unicode=False).cache()
@@ -63,6 +78,6 @@ if __name__=='__main__':
     rdd = patterns.mapPartitionsWithIndex(extractSchools).join(placesrdd).values().map(lambda x: (x[0][0],x[0][1],x[1])).sortBy(lambda x: x[0])
     categories = ['big_box_grocers','convenience_stores','drinking_places','full_service_restaurants','limited_service_restaurants','pharmacies_and_drug_stores','snack_and_bakeries','specialty_food_stores','supermarkets_except_convenience_stores']
     for category in categories:
-        rdd1 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(np.median)
-        rdd2 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(np.std)
+        rdd1 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(median)
+        rdd2 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(stddev)
         rdd2.join(rdd1).map(lambda x: (x[0].split('-')[0],x[0],x[1][0],x[1][1],next(zeroed(x[1][0]-x[1][1])),x[1][0]+x[1][1])).saveAsTextFile('test/'+ category)
