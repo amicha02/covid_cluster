@@ -73,7 +73,6 @@ if __name__=='__main__':
             return stddev 
         else:
             return 0
-    sc.stop()
     sc = pyspark.SparkContext()
     sqlContext = sql.SQLContext(sc)
     places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv', use_unicode=False)
