@@ -1,12 +1,9 @@
 import pyspark
-from pyspark.sql import SQLContext
-from pyspark import sql
 import pandas as pd 
-from pyspark.sql.functions import col
 import ast,datetime
-import pyspark.sql.functions as F
 import csv
 import sys
+import statistics
 if __name__=='__main__':
     def categorize(x):
       if x == '452210' or x == '452311':
@@ -51,19 +48,19 @@ if __name__=='__main__':
                 (id, dates,visits) = (row[1], next(range_f(row[12], row[13])),row[16])
                 for i,date in enumerate(dates):
                   yield (id, (date,ast.literal_eval(visits)[i]))
+    def zeroed(number):
+        if number >= 0:
+            yield (number)
+        if number <0:
+            yield (0)
     sc = pyspark.SparkContext()
     sqlContext = sql.SQLContext(sc)
     places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv', use_unicode=False).cache()
     placesrdd= places.mapPartitionsWithIndex(extractPlaces)
-    patterns = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/*', use_unicode=False).cache()
+    patterns = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/part-00000', use_unicode=False).cache()
     rdd = patterns.mapPartitionsWithIndex(extractSchools).join(placesrdd).values().map(lambda x: (x[0][0],x[0][1],x[1])).sortBy(lambda x: x[0])
     categories = ['big_box_grocers','convenience_stores','drinking_places','full_service_restaurants','limited_service_restaurants','pharmacies_and_drug_stores','snack_and_bakeries','specialty_food_stores','supermarkets_except_convenience_stores']
-    df = rdd.toDF(['date','visits','category'])
     for category in categories:
-          df_category = df.filter(F.col('category') == category)
-          magic_percentile = F.expr('percentile_approx(visits, 0.5)')
-          magic_std = F.expr('stddev(visits)')
-          split_col = pyspark.sql.functions.split(df_category['date'], '-')
-          df_new = df_category.groupBy('date').agg(magic_percentile.alias('median'),magic_std.alias('std'))
-          df1_new = df_new.withColumn('year', split_col.getItem(0)).withColumn('low', ( df_new['median'] - df_new['std'] ) ).withColumn('high', ( df_new['median'] + df_new['std'] )  ).withColumn("low", F.when(F.col("low") > 0, F.col("low")).otherwise(0))
-          df1_new.rdd.saveAsTextFile('test/'+category)
+        rdd1 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(statistics.median)
+        rdd2 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(statistics.stdev)
+        rdd2.join(rdd1).map(lambda x: (x[0].split('-')[0],x[0],x[1][0],x[1][1],next(zeroed(x[1][0]-x[1][1])),x[1][0]+x[1][1])).saveAsTextFile('test/'+ category)
