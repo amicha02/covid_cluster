@@ -67,9 +67,13 @@ if __name__=='__main__':
         return (median)
     def stddev(data):
         n = len(data)
-        mean = sum(data)/n
-        stddev = (sum([(x-mean)**2 for x in data])/(n-1))**0.5
-        return stddev 
+        if n>=2:
+            mean = sum(data)/n
+            stddev = (sum([(x-mean)**2 for x in data])/(n-1))**0.5
+            return stddev 
+        else:
+            return 0
+
     sc = pyspark.SparkContext()
     sqlContext = sql.SQLContext(sc)
     places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv', use_unicode=False).cache()
