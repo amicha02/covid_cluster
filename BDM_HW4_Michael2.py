@@ -3,7 +3,7 @@ import pandas as pd
 import ast,datetime
 import csv
 import sys
-import statistics
+import numpy as np
 from pyspark.sql import SQLContext
 from pyspark import sql
 if __name__=='__main__':
@@ -63,6 +63,6 @@ if __name__=='__main__':
     rdd = patterns.mapPartitionsWithIndex(extractSchools).join(placesrdd).values().map(lambda x: (x[0][0],x[0][1],x[1])).sortBy(lambda x: x[0])
     categories = ['big_box_grocers','convenience_stores','drinking_places','full_service_restaurants','limited_service_restaurants','pharmacies_and_drug_stores','snack_and_bakeries','specialty_food_stores','supermarkets_except_convenience_stores']
     for category in categories:
-        rdd1 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(statistics.median)
-        rdd2 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(statistics.stdev)
+        rdd1 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(np.median)
+        rdd2 = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).groupByKey().mapValues(np.std)
         rdd2.join(rdd1).map(lambda x: (x[0].split('-')[0],x[0],x[1][0],x[1][1],next(zeroed(x[1][0]-x[1][1])),x[1][0]+x[1][1])).saveAsTextFile('test/'+ category)
