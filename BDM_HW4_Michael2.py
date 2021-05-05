@@ -4,6 +4,8 @@ import ast,datetime
 import csv
 import sys
 import statistics
+from pyspark.sql import SQLContext
+from pyspark import sql
 if __name__=='__main__':
     def categorize(x):
       if x == '452210' or x == '452311':
