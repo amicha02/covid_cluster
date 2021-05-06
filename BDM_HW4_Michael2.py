@@ -77,7 +77,7 @@ if __name__=='__main__':
     sqlContext = sql.SQLContext(sc)
     places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv').cache()
     placesrdd= places.mapPartitionsWithIndex(extractPlaces)
-    patterns = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/part-00000')
+    patterns = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/*')
     rdd = patterns.mapPartitionsWithIndex(extractSchools).join(placesrdd).values().map(lambda x: (x[0][0],x[0][1],x[1])).sortBy(lambda x: x[0]).cache()
     categories = ['big_box_grocers','convenience_stores','drinking_places','full_service_restaurants','limited_service_restaurants','pharmacies_and_drug_stores','snack_and_bakeries','specialty_food_stores','supermarkets_except_convenience_stores']
     for category in categories:
