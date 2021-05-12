@@ -28,6 +28,7 @@ if __name__=='__main__':
         yield ('supermarkets_except_convenience_stores')
       else:
         yield('whatever')
+        #### use number instead of string 
     def extractPlaces(partId, records):
         if partId==0:
             next(records)
@@ -35,7 +36,7 @@ if __name__=='__main__':
         for row in reader:
             (id,category) = (row[1],next(categorize(row[9])))
             if category != 'whatever':
-                yield (id,category)
+                yield (id,category) 
     def range_f(start,end):
         start = datetime.datetime.strptime(start.split('T')[0] , '%Y-%m-%d')
         end = datetime.datetime.strptime(end.split('T')[0] , '%Y-%m-%d')
@@ -78,10 +79,11 @@ if __name__=='__main__':
     places = sc.textFile('hdfs:///data/share/bdm/core-places-nyc.csv').cache()
     placesrdd= places.mapPartitionsWithIndex(extractPlaces)
     patterns = sc.textFile('hdfs:///data/share/bdm/weekly-patterns-nyc-2019-2020/*')
-    rdd = patterns.mapPartitionsWithIndex(extractSchools).join(placesrdd).values().map(lambda x: (x[0][0],x[0][1],x[1])).sortBy(lambda x: x[0]).cache()
+    rdd = patterns.mapPartitionsWithIndex(extractSchools).join(placesrdd).values().map(lambda x: (x[0][0],x[0][1],x[1])).map(lambda x: (x[0],x[1])).groupByKey().cache()
     categories = ['big_box_grocers','convenience_stores','drinking_places','full_service_restaurants','limited_service_restaurants','pharmacies_and_drug_stores','snack_and_bakeries','specialty_food_stores','supermarkets_except_convenience_stores']
     for category in categories:
-        filtered_rdd = rdd.filter(lambda x: x[2]== category).map(lambda x: (x[0],x[1])).cache()
-        rdd1 = filtered_rdd.groupByKey().mapValues(median)
-        rdd2 = filtered_rdd.groupByKey().mapValues(stddev)
+        filtered_rdd = rdd.filter(lambda x: x[2]== category).cache() 
+        rdd1 = filtered_rdd.mapValues(median) # group them firsts cache it, and then map values 
+        rdd2 = filtered_rdd.mapValues(stddev) 
         rdd2.join(rdd1).map(lambda x: (x[0].split('-')[0],x[0],x[1][0],x[1][1],next(zeroed(x[1][0]-x[1][1])),x[1][0]+x[1][1])).saveAsTextFile('test/'+ category)
+    # do the standard deviation and median before filter 
