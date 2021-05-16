@@ -8,6 +8,8 @@ import sys
 import ast
 import statistics
 from datetime import timedelta
+import dateutil.parser
+import datetime
 #filter the Core Places data set to extract the store IDs of interest
 def filterPOIs(CAT_CODES,CAT_GROUP,_, lines):
     if _==0:
@@ -22,13 +24,12 @@ def filterPOIs(CAT_CODES,CAT_GROUP,_, lines):
 # 14: raw_visit_counts
 # 16: visits_by_day
 def extractVisits(storeGroup, _, lines):
-    import datetime
     reader = csv.reader(lines)
     for row in reader:
       if row[0] in storeGroup: 
           for index,value in enumerate(ast.literal_eval(row[16])): 
-                if (datetime.datetime.strptime(row[12], '%m/%d/%Y %H:%M')+ datetime.timedelta(days=index)).year > 2018:
-                    yield ((storeGroup[row[0]],str(datetime.datetime.strptime(row[12], '%m/%d/%Y %H:%M')+datetime.timedelta(days=index))),value)
+                if (dateutil.parser.parse(row[12])+ datetime.timedelta(days=index)).year > 2018:
+                    yield ((storeGroup[row[0]],str(dateutil.parser.parse(row[12])+datetime.timedelta(days=index))),value)
                 
 def remake_list(iterable,group_number):
     lst = list(iterable)
