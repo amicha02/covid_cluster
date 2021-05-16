@@ -6,14 +6,11 @@ import json
 import numpy as np
 import sys
 import ast
-import statistics
 from datetime import timedelta
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
 #filter the Core Places data set to extract the store IDs of interest
 def filterPOIs(CAT_CODES,CAT_GROUP,_, lines):
-    if _==0:
-        next(lines)
     reader = csv.reader(lines)
     for row in reader:
         if row[9] in CAT_CODES:
@@ -28,31 +25,34 @@ def extractVisits(storeGroup, _, lines):
     for row in reader:
       if row[0] in storeGroup: 
           for index,value in enumerate(ast.literal_eval(row[16])): 
-                if (dateutil.parser.parse(row[12])+ datetime.timedelta(days=index)).year > 2018:
+                if (dateutil.parser.parse(row[12])+ datetime.timedelta(days=index)).year in [2019,2020]:
                     yield ((storeGroup[row[0]],(dateutil.parser.parse(row[12]).replace(tzinfo=None)+ relativedelta(day=index)-dateutil.parser.parse('2019-01-01').replace(tzinfo=None)).days),value)
-                
-def remake_list(iterable,group_number):
-    lst = list(iterable)
-    n = groupCount[group_number] - len(lst)
-    lst.extend(n*[0])
-    yield lst
+               
 
 # Remember to use groupCount to know how long the visits list should be
-def remake_list(iterable,group_number,groupCount):
-    lst = list(iterable)
-    n = groupCount[group_number] - len(lst)
-    lst.extend(n*[0])
-    yield lst
+#def remake_list(iterable,group_number,groupCount):
+#    lst = list(iterable)
+#    n = groupCount[group_number] - len(lst)
+#    lst.extend(n*[0])
+#    yield lst
 
 
 def computeStats(groupCount, _, records):
     for row in records:
-        updated_list = next(remake_list(row[1],row[0][0],groupCount))
-        median = statistics.median(updated_list)
-        std = statistics.stdev(updated_list)
+        #######################
+ #       updated_list = next(remake_list(row[1],row[0][0],groupCount))
+        n = groupCount[row[0][0]] - len(row[1])
+        updated_list = list(row[1]) + [0 for i in range(n)]
+        ##############################
+        median = np.median(updated_list)
+        std = np.std(updated_list)
         date = datetime.datetime(2019,1,1)+ timedelta(days=int(row[0][1]))
-        string = str(date).split('-')[0] + ',' + str(date).split(' ')[0] + ',' + str(median) + ',' +str(max(0,median-std)) +','+str(int(median+std))
-        yield (row[0][0],string)
+        if date.year == 2020:
+            string = str(date).split('-')[0] + ',' + str(date).split(' ')[0] + ',' + str(median) + ',' +str(max(0,median-std)) +','+str(int(median+std))
+            yield (row[0][0],string)
+        else:
+            string = str(date).split('-')[0] + ',' + date.replace(year=2020).strftime('%Y-%m-%d') + ',' + str(median) + ',' +str(max(0,median-std)) +','+str(int(median+std))
+            yield (row[0][0],string)
 
 
 
