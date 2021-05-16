@@ -13,6 +13,8 @@ def filterPOIs(_, lines):
     if _==0:
         next(lines)
     reader = csv.reader(lines)
+    CAT_CODES ={'445210', '445110', '722410', '452311', '722513', '445120', '446110', '445299', '722515', '311811', '722511', '445230', '446191', '445291', '445220', '452210', '445292'}
+    CAT_GROUP = {'452210': 0, '452311': 0, '445120': 1, '722410': 2, '722511': 3, '722513': 4, '446110': 5, '446191': 5, '722515': 6, '311811': 6, '445210': 7, '445299': 7, '445230': 7, '445291': 7, '445220': 7, '445292': 7, '445110': 8}
     for row in reader:
         if row[9] in CAT_CODES:
             yield (row[0],CAT_GROUP[row[9]])
@@ -64,8 +66,6 @@ def main(sc):
     rddPattern = sc.textFile('/data/share/bdm/weekly-patterns-nyc-2019-2020/*')
     OUTPUT_PREFIX = sys.argv[1]
     #TO_BE_COMPLETED
-    CAT_CODES ={'445210', '445110', '722410', '452311', '722513', '445120', '446110', '445299', '722515', '311811', '722511', '445230', '446191', '445291', '445220', '452210', '445292'}
-    CAT_GROUP = {'452210': 0, '452311': 0, '445120': 1, '722410': 2, '722511': 3, '722513': 4, '446110': 5, '446191': 5, '722515': 6, '311811': 6, '445210': 7, '445299': 7, '445230': 7, '445291': 7, '445220': 7, '445292': 7, '445110': 8}
     rddD = rddPlaces.mapPartitionsWithIndex(filterPOIs).cache()
     storeGroup = dict(rddD.collect())
     groupCount = rddD.map(lambda x: (storeGroup[x[0]], 1)).reduceByKey(lambda x,y: x+y).sortByKey(True).map(lambda x:x[1]).collect()
