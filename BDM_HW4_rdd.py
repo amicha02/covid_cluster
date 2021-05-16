@@ -9,7 +9,6 @@ import ast
 import statistics
 from datetime import timedelta
 import dateutil.parser
-import datetime
 #filter the Core Places data set to extract the store IDs of interest
 def filterPOIs(CAT_CODES,CAT_GROUP,_, lines):
     if _==0:
@@ -38,7 +37,7 @@ def remake_list(iterable,group_number):
     yield lst
 
 # Remember to use groupCount to know how long the visits list should be
-def remake_list(iterable,group_number):
+def remake_list(iterable,group_number,groupCount):
     lst = list(iterable)
     n = groupCount[group_number] - len(lst)
     lst.extend(n*[0])
@@ -47,7 +46,7 @@ def remake_list(iterable,group_number):
 
 def computeStats(groupCount, _, records):
     for row in records:
-        updated_list = next(remake_list(row[1],row[0][0]))
+        updated_list = next(remake_list(row[1],row[0][0],groupCount))
         median = statistics.median(updated_list)
         std = statistics.stdev(updated_list)
         date = datetime.datetime(2019,1,1)+timedelta(days=row[0][1])
