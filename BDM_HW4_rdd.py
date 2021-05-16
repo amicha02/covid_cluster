@@ -49,7 +49,7 @@ def computeStats(groupCount, _, records):
         updated_list = next(remake_list(row[1],row[0][0],groupCount))
         median = statistics.median(updated_list)
         std = statistics.stdev(updated_list)
-        date = datetime.datetime(2019,1,1)+timedelta(days=row[0][1])
+        date = datetime.datetime(2019,1,1)+ timedelta(days=int(row[0][1]))
         string = str(date).split('-')[0] + ',' + str(date).split(' ')[0] + ',' + str(median) + ',' +str(max(0,median-std)) +','+str(int(median+std))
         yield (row[0][0],string)
 
