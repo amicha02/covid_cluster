@@ -28,7 +28,7 @@ def extractVisits(storeGroup, _, lines):
       if row[0] in storeGroup: 
           for index,value in enumerate(ast.literal_eval(row[16])): 
                 if (dateutil.parser.parse(row[12])+ datetime.timedelta(days=index)).year > 2018:
-                    yield ((storeGroup[row[0]],str(dateutil.parser.parse(row[12])+datetime.timedelta(days=index))),value)
+                    yield ((storeGroup[row[0]],(dateutil.parser.parse(row[12])+datetime.timedelta(days=index)-datetime.datetime(2019, 1, 1)).days),value)
                 
 def remake_list(iterable,group_number):
     lst = list(iterable)
