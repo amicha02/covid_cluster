@@ -5,8 +5,8 @@ import functools
 import json
 import numpy as np
 import sys
-from datetime import timedelta
-import dateutil.parser
+from datetime import timedelta,datetime
+#import dateutil.parser
 def main(sc):
     #filter the Core Places data set to extract the store IDs of interest
     def filterPOIs(CAT_CODES,CAT_GROUP,_, lines):
@@ -19,21 +19,28 @@ def main(sc):
     # 12: date_range_start
     # 14: raw_visit_counts
     # 16: visits_by_day
+   # def extractVisits(storeGroup, _, lines):
+    #    reader = csv.reader(lines)
+     #   for row in reader:
+      #    if row[0] in storeGroup: 
+       #       for index,value in enumerate(json.loads(row[16])): 
+        #            if (dateutil.parser.parse(row[12])+ timedelta(days=index)).year in [2019,2020]:
+         #               yield ((storeGroup[row[0]],(dateutil.parser.parse(row[12]).replace(tzinfo=None)+ timedelta(days=index)-dateutil.parser.parse('2019-01-01').replace(tzinfo=None)).days),value)
     def extractVisits(storeGroup, _, lines):
         reader = csv.reader(lines)
         for row in reader:
-          if row[0] in storeGroup: 
-              for index,value in enumerate(json.loads(row[16])): 
-                    if (dateutil.parser.parse(row[12])+ timedelta(days=index)).year in [2019,2020]:
-                        yield ((storeGroup[row[0]],(dateutil.parser.parse(row[12]).replace(tzinfo=None)+ timedelta(days=index)-dateutil.parser.parse('2019-01-01').replace(tzinfo=None)).days),value)
-               
+            if row[0] in storeGroup: 
+                date = datetime.fromisoformat(row[12][:10])
+                for index,value in enumerate(json.loads(row[16])): 
+                    if (date + timedelta(days=index)).year in [2019,2020]:
+                        yield ((storeGroup[row[0]],(date + timedelta(days=index) - datetime(2019,1,1)).days),value)           
     def computeStats(groupCount, _, records):
         for row in records:
             n = groupCount[row[0][0]] - len(row[1])
             updated_list = list(row[1]) + [0 for i in range(n)]
             median = np.median(updated_list)
             std = np.std(updated_list)
-            date = datetime.datetime(2019,1,1)+ timedelta(days=int(row[0][1]))
+            date = datetime(2019,1,1)+ timedelta(days=int(row[0][1]))
             if date.year == 2020:
                 yield '{},{},{},{},{}'.format(date.year,date.strftime('%Y-%m-%d'),median,int(max(0,median-std)),int(median+std))
             else: 
