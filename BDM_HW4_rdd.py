@@ -7,7 +7,6 @@ import numpy as np
 import sys
 from datetime import timedelta
 import dateutil.parser
-from dateutil.relativedelta import relativedelta
 def main(sc):
     #filter the Core Places data set to extract the store IDs of interest
     def filterPOIs(CAT_CODES,CAT_GROUP,_, lines):
@@ -25,8 +24,8 @@ def main(sc):
         for row in reader:
           if row[0] in storeGroup: 
               for index,value in enumerate(json.loads(row[16])): 
-                    if (dateutil.parser.parse(row[12])+ datetime.timedelta(days=index)).year in [2019,2020]:
-                        yield ((storeGroup[row[0]],(dateutil.parser.parse(row[12]).replace(tzinfo=None)+ relativedelta(day=index)-dateutil.parser.parse('2019-01-01').replace(tzinfo=None)).days),value)
+                    if (dateutil.parser.parse(row[12])+ timedelta(days=index)).year in [2019,2020]:
+                        yield ((storeGroup[row[0]],(dateutil.parser.parse(row[12]).replace(tzinfo=None)+ timedelta(days=index)-dateutil.parser.parse('2019-01-01').replace(tzinfo=None)).days),value)
                
     def computeStats(groupCount, _, records):
         for row in records:
@@ -36,9 +35,9 @@ def main(sc):
             std = np.std(updated_list)
             date = datetime.datetime(2019,1,1)+ timedelta(days=int(row[0][1]))
             if date.year == 2020:
-                yield row[0][0], ','.join([str(date.year),date.strftime('%Y-%m-%d'),str(median),str(int(max(0,median-std))),str(int(median+std))])
+                yield '{},{},{},{},{}'.format(date.year,date.strftime('%Y-%m-%d'),median,int(max(0,median-std)),int(median+std))
             else: 
-                yield row[0][0], ','.join([str(date.year),date.strftime('%Y-%m-%d').replace(year=2020),str(median),str(int(max(0,median-std))),str(int(median+std))])
+                yield '{},{},{},{},{}'.format(date.year,date.replace(year=2020).strftime('%Y-%m-%d'),median,int(max(0,median-std)),int(median+std))
     '''
     Transfer our code from the notebook here, however, remember to replace
     the file paths with the ones provided in the problem description.
