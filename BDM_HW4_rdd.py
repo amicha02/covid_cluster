@@ -36,11 +36,9 @@ def main(sc):
             std = np.std(updated_list)
             date = datetime.datetime(2019,1,1)+ timedelta(days=int(row[0][1]))
             if date.year == 2020:
-                string = str(date).split('-')[0] + ',' + str(date).split(' ')[0] + ',' + str(median) + ',' +str(max(0,median-std)) +','+str(int(median+std))
-                yield (row[0][0],string)
-            else:
-                string = str(date).split('-')[0] + ',' + date.replace(year=2020).strftime('%Y-%m-%d') + ',' + str(median) + ',' +str(max(0,median-std)) +','+str(int(median+std))
-                yield (row[0][0],string)
+                yield row[0][0], ','.join([str(date.year),date.strftime('%Y-%m-%d'),str(median),str(int(max(0,median-std))),str(int(median+std))])
+            else: 
+                yield row[0][0], ','.join([str(date.year),date.strftime('%Y-%m-%d').replace(year=2020),str(median),str(int(max(0,median-std))),str(int(median+std))])
     '''
     Transfer our code from the notebook here, however, remember to replace
     the file paths with the ones provided in the problem description.
